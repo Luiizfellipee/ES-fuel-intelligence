@@ -8,7 +8,7 @@ Uma forma de explorar como os preços pesquisados variam entre produtos, municí
 
 ![Python](https://img.shields.io/badge/Python-análise-3776AB?style=flat-square&logo=python&logoColor=white) ![DuckDB](https://img.shields.io/badge/DuckDB-SQL-FFF000?style=flat-square&logo=duckdb&logoColor=black) ![Fonte](https://img.shields.io/badge/dados-ANP-17365D?style=flat-square)
 
-[Sobre o projeto](#sobre-o-projeto) · [Dados e metodologia](#dados-e-metodologia) · [Como reproduzir](#como-reproduzir) · [Limitações](#limitações)
+[Sobre o projeto](#sobre-o-projeto) · [Dados e metodologia](#dados-e-metodologia) · [Arquitetura-alvo](#arquitetura-alvo-planejada) · [Como reproduzir](#como-reproduzir) · [Limitações](#limitações)
 
 </div>
 
@@ -39,6 +39,19 @@ O [notebook de exploração](notebooks/01_perfil.ipynb) lê o CSV da ANP, examin
 
 As comparações devem usar a **data da coleta**, identificar o produto e considerar quantas observações e localidades aparecem em cada grupo. O [dicionário de dados](docs/data_dictionary.md) descreve os campos usados; as [limitações da base](docs/limitation.md) orientam a interpretação.
 
+## Arquitetura-alvo (planejada)
+
+Esta seção descreve a direção técnica do projeto. O fluxo reproduzível disponível hoje é o notebook com o recorte em CSV e as consultas exploratórias em DuckDB, descritos acima.
+
+- **Fontes:** CSVs da série histórica de preços da ANP. A integração com dados cadastrais oficiais de revendedores da ANP por API depende da confirmação de disponibilidade, endpoints, campos e regras de acesso. Uma consulta por CEP é opcional e depende de validação prévia.
+- **Ingestão e tratamento:** Python e pandas para leitura e padronização, com validações, registro de lotes processados e proveniência dos dados.
+- **Persistência:** PostgreSQL como banco principal, com schemas `raw` (origem preservada), `staging` (dados tratados) e `analytics` (dados para análise). O DuckDB permanece como ferramenta de exploração durante a transição.
+- **Modelagem analítica:** dimensões de data, município, posto e produto, além de uma tabela fato de preços. Definir o grão e as chaves de cada tabela, tratar duplicatas e considerar mudanças ao longo do tempo. Views ou tabelas em `analytics` servirão ao Power BI.
+- **Visualização:** Power BI Desktop conectado diretamente às views ou tabelas `analytics` do PostgreSQL em modo **Import**, com relatório `.pbix`, capturas de tela e conclusões documentadas. O Power BI Desktop é executado fora do Docker.
+- **API própria:** FastAPI para consultas de leitura de preços e previsões, com documentação OpenAPI automática. A API não é pré-requisito do Power BI nem a fonte principal do relatório.
+- **Previsão:** após construir uma série temporal coerente, comparar a baseline do último valor observado com um modelo estatístico e, se fizer sentido, um modelo de ML. Previsões e métricas terão tabelas específicas.
+- **Infraestrutura:** Docker Compose para PostgreSQL, ETL e FastAPI, com volume persistente e `.env.example` sem segredos. Testes com pytest; CI em etapa posterior.
+
 ## Como reproduzir
 
 É necessário ter **Python 3.14** e [uv](https://docs.astral.sh/uv/getting-started/installation/) instalados. Na raiz do repositório, instale as dependências:
@@ -59,7 +72,7 @@ Os preços representam **postos e datas pesquisados pela ANP**, não todos os po
 
 Preço atípico é um sinal para investigação, **não evidência de fraude ou irregularidade**. A ausência de `Valor de Compra` no arquivo utilizado impede calcular a margem dos postos. Por isso, cada conclusão precisa informar seu recorte e evitar extrapolações além dos registros disponíveis.
 
-## Tecnologias
+## Tecnologias em uso
 
 Python, pandas e Jupyter para exploração e preparação dos dados; SQL e DuckDB para consultas analíticas; uv para gerenciar o ambiente.
 
