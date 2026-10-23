@@ -1,7 +1,7 @@
--- Preparação: disponibiliza o CSV como uma view
+-- Execute a partir da raiz do repositório: disponibiliza o CSV como uma view.
 CREATE OR REPLACE VIEW data_es AS
 SELECT *
-FROM read_csv_auto('../data/raw/data_es.csv');
+FROM read_csv_auto('data/raw/data_es.csv');
 
 -- Pergunta 1: quantas linhas há no total, em produto e em municipio?
 SELECT

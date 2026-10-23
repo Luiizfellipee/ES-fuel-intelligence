@@ -1,3 +1,4 @@
+-- Execute após 01_perfil.sql, na mesma conexão DuckDB.
 -- Calcule preço médio, mediano, mínimo e máximo por produto.
 
 SELECT
@@ -8,4 +9,4 @@ SELECT
     MAX(Valor) AS preco_maximo
 FROM data_es
 GROUP BY Produto
-ORDER BY 1
+ORDER BY 1;
