@@ -14,7 +14,7 @@ files/*
 _versao_anterior/*
 candidaturas/*
 scripts/*
-
+/docs/GUIA_PRATICO_ES_FUEL_INTELLIGENCE.md
 # Instruções e ferramentas locais da trilha de estudos
 .agents/
 .claude/

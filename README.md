@@ -33,9 +33,9 @@ O [notebook de exploração](notebooks/01_perfil.ipynb) lê o CSV da ANP, examin
 
 | Artefato | Conteúdo |
 |:--|:--|
-| [01_perfil.sql](sql/01_perfil.sql) | Cria a view do recorte e conta registros por produto e município |
-| [02_perfil.sql](sql/02_perfil.sql) | Calcula média, mediana, mínimo e máximo por produto |
-| [03-perfil.sql](sql/03-perfil.sql) | Calcula mediana, número de observações e postos distintos por produto |
+| [01_perfil.sql](sql/old/01_perfil.sql) | Cria a view do recorte e conta registros por produto e município |
+| [02_perfil.sql](sql/old/02_perfil.sql) | Calcula média, mediana, mínimo e máximo por produto |
+| [03-perfil.sql](sql/old/03-perfil.sql) | Calcula mediana, número de observações e postos distintos por produto |
 
 As comparações devem usar a **data da coleta**, identificar o produto e considerar quantas observações e localidades aparecem em cada grupo. O [dicionário de dados](docs/data_dictionary.md) descreve os campos usados; as [limitações da base](docs/limitation.md) orientam a interpretação.
 
@@ -64,7 +64,27 @@ Baixe o CSV automotivo do primeiro semestre de 2026 na [página da ANP](https://
 
 Abra o Jupyter Lab com `uv run jupyter lab` e execute `notebooks/01_perfil.ipynb` a partir da pasta `notebooks/`. O notebook usa o diretório de trabalho para localizar o CSV original e gera `data/raw/data_es.csv`.
 
-As consultas em `sql/` usam esse recorte. Execute-as a partir da raiz do repositório; `02_perfil.sql` usa a view criada por `01_perfil.sql` e, portanto, precisa da mesma conexão DuckDB. `03-perfil.sql` pode ser executado separadamente.
+As consultas exploratórias em `sql/old/` usam esse recorte. Execute-as a partir da raiz do repositório; `02_perfil.sql` usa a view criada por `01_perfil.sql` e, portanto, precisa da mesma conexão DuckDB. `03-perfil.sql` pode ser executado separadamente.
+
+### Infraestrutura com Docker
+
+Se ainda não existir, copie `.env.example` para `.env` e troque a senha de exemplo antes de iniciar os serviços. O arquivo `.env` fica fora do Git. No PowerShell:
+
+```powershell
+if (-not (Test-Path .env)) { Copy-Item .env.example .env }
+docker compose up -d postgres
+docker compose ps
+```
+
+O PostgreSQL fica acessível em `localhost:5434` por padrão, inclusive para o Power BI Desktop. Na criação inicial do volume, o banco recebe os schemas `raw`, `staging` e `analytics`. O volume `pgdata` preserva os dados entre reinícios; editar a senha no `.env` depois da primeira inicialização não altera a senha já gravada no banco.
+
+Para iniciar a API básica de saúde e abrir a documentação OpenAPI em `http://localhost:8000/docs`:
+
+```powershell
+docker compose --profile api up -d --build api
+```
+
+O serviço `etl` é um contêiner para executar scripts de ingestão sob demanda com `docker compose run --rm etl <comando>`. O pipeline de ingestão ainda precisa ser implementado; esse serviço não processa arquivos automaticamente. Os CSVs originais entram no contêiner como somente leitura em `/app/data/raw`. O Power BI Desktop roda no Windows, fora do Compose.
 
 ## Limitações
 
